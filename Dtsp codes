@@ -1,0 +1,231 @@
+%1st order program
+clc
+clear all
+R1 = 100000;
+R2 = 1000000;
+C = 1*10^(-6);
+for t=1:1:50
+v1(t) = 1 - exp(-t/(R1*C));
+v2(t) = 1 - exp(-t/(R2*C));
+end
+figure(1)
+plot(v1)
+figure(2)
+plot(v2)
+
+
+
+% up/down/average sampling
+clc
+clear all
+x = [ 1 2 3 4 5 6 7 6 5 4 3 2 1 1 2 3 4 5 6 7 6 5 4 3 2 1 1 2 3 4 5 6 7 6 5 4 3 2 1];
+nx = length(x);
+% down sampling
+for n = 1:1:nx/2
+ y(n) = x(n* 2);
+end
+ny = length(y);
+%up sampling
+for n = 2:2:ny*2
+ z(n) = y(n/2);
+end
+nz = length(z);
+%average up sampling
+zAvg = z;
+for n = 3:2:nz-3
+ zAvg(n)=(z(n-1)+z(n+1))/2;
+end
+zAvg;
+figure(1), stem(x),title('orignal signal x(n)')
+figure(2), stem(y),title('down sampled signal y(n)')
+figure(3), stem(z),title('up sampled signal z(n)')
+figure(4), stem(zAvg),title('average up sampled signal x(n)')
+
+
+
+% up/down sampling Audio
+clc
+clear all
+%x = [ 1 2 3 4 5 6 7 6 5 4 3 2 1 1 2 3 4 5 6 7 6 5 4 3 2 1 1 2 3 4 5 6 7 6 5 4 3 2 1];
+[x1, Fs , bits] = wavread('song8k.wav'); %stereo
+ x = x1(:,1)'; % converting to mono
+nx = length(x);
+% down sampling
+for n = 1:1:nx/2
+ y(n) = x(n* 2);
+end
+ny = length(y);
+%up sampling
+for n = 2:2:ny*2
+ z(n) = y(n/2);
+end
+nz = length(z);
+%average up sampling
+zAvg = z;
+for n = 3:2:nz-3
+ zAvg(n)=(z(n-1)+z(n+1))/2;
+end
+zAvg;
+figure(1), bar(x),title('orignal signal x(n)')
+figure(2), bar(y),title('down sampled signal y(n)')
+figure(3), bar(z),title('up sampled signal z(n)')
+figure(4), bar(zAvg),title('average up sampled signal x(n)')
+
+
+
+% linear convolution using circular convolution
+clc;
+clear all;
+x1 = [ 1 2 3 4 5 2 09 8 9 6 4 9 5 4 ];
+x2 = [4 5 8 9 4 7 8 9 6];
+x1
+x2
+N1 = length(x1);
+N2 = length(x2);
+N = N2 + N1 -1;
+x1=[x1 zeros(1,N-N1)];
+x2=[x2 zeros(1,N-N2)];
+h = x2;
+N = length(h);
+b = h;
+c = h';
+for n = 1:1:N-1
+ b = [b(N) b(1:N-1)];
+ c = [c b'];
+end
+c;
+y = c*x1';
+y
+figure(1),stem(x1)
+figure(2),stem(x2)
+figure(3),stem(y),title('signal')
+
+
+
+% DFT of Audio signal
+clc
+clear all
+%x = [1 2 3 4 3 2 1 1 2 3 4 3 2 1 1 2 3 4 3 2 1 1 2 3 4 3 2 1 1 2 3 4 3 2 1 ];
+[ x1, Fs , bits] = wavread('song8k.wav');
+x = x1(:,1)';
+X = fft(x);
+%x = input('matrix = ');
+N=length(x);
+Xmag = abs(X);
+figure(1),bar(x),xlabel('n'),ylabel('x(n)'),title('input
+signal in time domain')
+figure(2),bar(Xmag),xlabel('k'),ylabel('|
+X(k)|'),title('magnitude spectrum’)
+
+
+
+% Window Techniques
+clc;
+clear all;
+for n = 0:1:300
+ hd(n+1) = (sin(0.4*pi*(n-150)))/(pi*(n-150));
+end
+hd(151) = 0.4;
+figure(1),plot(hd)
+% window
+M = length(hd);
+for n= 0:1:300
+ w_rect(n+1) = 1; %rectangular window
+ w_hann(n+1)= 0.5 - 0.5*cos((2*pi*n)/(M-1)); % hann window
+ w_ham(n+1)= 0.54 - 0.46*cos((2*pi*n)/(M-1)); % hamming
+window
+end
+h_rect = hd.*w_rect;
+h_hann = hd.*w_hann;
+h_ham = hd.*w_ham;
+%figure(2), plot(h_rect)
+figure(2), freqz(h_rect,1,M,15000),title('rectangular
+window')
+figure(3), plot(w_hann),title('hann window')
+figure(4), freqz(h_hann,1,M,15000),title('hann window')
+figure(5), plot(w_ham),title('hamming window')
+figure(6), freqz(h_ham,1,M,15000),title('hamming window')
+
+
+
+% identifying and removing noise in a song
+clc;
+clear all;
+% identifying noise in a song
+[x1, Fs,bits] = wavread('six.wav');
+x = x1(:,1); %streo to mono
+figure(1), plot(x); % time domain representation
+X = fft(x);
+Xmag = abs(X);
+figure(2),bar(Xmag); % freq domain re[presentation
+[ Xaxis , Yaxis] = ginput(1)
+noise = (Fs*Xaxis/length(Xmag))-300; % 2.5100e+003
+% Filter
+FeqCoef =noise*1*2/Fs;
+Freq = FeqCoef*pi;
+for n = 0:1:300
+ hd(n+1) = (sin(Freq*(n-150)))/(pi*(n-150));
+end
+hd(151) = (Freq/pi);
+%figure(1),plot(hd)
+% window
+M = length(hd);
+for n= 0:1:300
+ w_rect(n+1) = 1; %rectangular window
+ w_hann(n+1)= 0.5 - 0.5*cos((2*pi*n)/(M-1)); % hann window
+ w_ham(n+1)= 0.54 - 0.46*cos((2*pi*n)/(M-1)); % hamming
+window
+end
+h_rect = hd.*w_rect;
+h_hann = hd.*w_hann;
+h_ham = hd.*w_ham;
+figure(3), freqz(h_rect,1,M,Fs),title('rectangular window')
+y = conv(x,h_rect);
+Y = fft(y);
+Ymag = abs(Y);
+figure(8), plot(Ymag)
+
+
+
+%Circular Convolution
+clc;
+clear all;
+x1 = [1 2 3 4];
+x2 = [5 6 7 8 9 10 9 8 7 6 5];
+N1 = length(x1);
+N2 = length(x2);
+if N1<N2
+x1 = [x1 zeros(1, N2-N1)]
+else
+x2 = [x2, zeros(1, N1-N2)]
+end
+x1
+x2
+b = x1;
+c = x1';
+N1 = length(x1);
+for n = 1:1:N1-1
+b = [b(N1) b(1:N1-1)];
+c = [c b'];
+end
+c;
+d = x2';
+f = c*d
+figure(1),stem(x1),title('x1')
+figure(2),stem(x2), title('x2')
+figure(3),stem(f), title('Circular Convolution')
+
+
+
+% identifying noise in a song
+clc;
+clear all;
+% identifying noise in a song
+[x1, Fs,bits] = wavread('six.wav');
+x = x1(:,1); %streo to mono
+figure(1), plot(x); % time domain representation
+X = fft(x);
+Xmag = abs(X);
+figure(2),bar(Xmag); % freq domain re[presentation
+[ Xaxis , Yaxis] = ginput(1)
+% noise = Fs*Xaxis/length(Xmag) 2.5100e+003
